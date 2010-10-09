@@ -12,7 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 require 'riak'
-
+require 'base64'
 module Riak
   class Client
     # The parent class for all backends that connect to Riak via HTTP.
@@ -37,6 +37,17 @@ module Riak
         }
       end
 
+      # Basic Auth header sent based on user and password settings in the client.
+      # @return [Hash] headers that will be merged with user-specified headers on every request.
+      def basic_auth
+        if @client.user && @client.password
+          {
+            "Authorization" => "Basic "+Base64::encode64(@client.user+":"+@client.password)
+          }
+        else
+          {}
+        end
+      end
       # Performs a HEAD request to the specified resource on the Riak server.
       # @param [Fixnum, Array] expect the expected HTTP response code(s) from Riak
       # @param [String, Array<String,Hash>] resource a relative path or array of path segments and optional query params Hash that will be joined to the root URI
@@ -47,7 +58,7 @@ module Riak
       # @return [Hash] response data, containing only the :headers and :code keys
       # @raise [FailedRequest] if the response code doesn't match the expected response
       def head(expect, *resource)
-        headers = default_headers.merge(resource.extract_options!)
+        headers = default_headers.merge(basic_auth.merge(resource.extract_options!))
         verify_path!(resource)
         perform(:head, path(*resource), headers, expect)
       end
@@ -67,7 +78,7 @@ module Riak
       # @return [Hash] response data, containing :headers, :body, and :code keys
       # @raise [FailedRequest] if the response code doesn't match the expected response
       def get(expect, *resource, &block)
-        headers = default_headers.merge(resource.extract_options!)
+        headers = default_headers.merge(basic_auth.merge(resource.extract_options!))
         verify_path!(resource)
         perform(:get, path(*resource), headers, expect, &block)
       end
@@ -88,7 +99,7 @@ module Riak
       # @return [Hash] response data, containing :headers, :code, and :body keys
       # @raise [FailedRequest] if the response code doesn't match the expected response
       def put(expect, *resource, &block)
-        headers = default_headers.merge(resource.extract_options!)
+        headers = default_headers.merge(basic_auth.merge(resource.extract_options!))
         uri, data = verify_path_and_body!(resource)
         perform(:put, path(*uri), headers, expect, data, &block)
       end
@@ -109,7 +120,7 @@ module Riak
       # @return [Hash] response data, containing :headers, :code and :body keys
       # @raise [FailedRequest] if the response code doesn't match the expected response
       def post(expect, *resource, &block)
-        headers = default_headers.merge(resource.extract_options!)
+        headers = default_headers.merge(basic_auth.merge(resource.extract_options!))
         uri, data = verify_path_and_body!(resource)
         perform(:post, path(*uri), headers, expect, data, &block)
       end
@@ -129,7 +140,7 @@ module Riak
       # @return [Hash] response data, containing :headers, :code and :body keys
       # @raise [FailedRequest] if the response code doesn't match the expected response
       def delete(expect, *resource, &block)
-        headers = default_headers.merge(resource.extract_options!)
+        headers = default_headers.merge(basic_auth.merge(resource.extract_options!))
         verify_path!(resource)
         perform(:delete, path(*resource), headers, expect, &block)
       end

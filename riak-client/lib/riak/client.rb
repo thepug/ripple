@@ -44,6 +44,12 @@ module Riak
     # @return [String] The URL path to the map-reduce HTTP endpoint
     attr_accessor :mapred
 
+    # @return [String] The username used to access Riak
+    attr_accessor :user
+ 
+    # @return [String] The password used to access Riak
+    attr_accessor :password
+
     # Creates a client connection to Riak
     # @param [Hash] options configuration options for the client
     # @option options [String] :host ('127.0.0.1') The host or IP address for the Riak endpoint
@@ -59,6 +65,8 @@ module Riak
       self.client_id = options[:client_id] || make_client_id
       self.prefix    = options[:prefix]    || "/riak/"
       self.mapred    = options[:mapred]    || "/mapred"
+      self.user      = options[:user]      || nil
+      self.password  = options[:password]  || nil
       raise ArgumentError, t("missing_host_and_port") unless @host && @port
     end
 
