@@ -59,7 +59,7 @@ module Riak
     # @option options [Fixnum, String] :client_id (rand(MAX_CLIENT_ID)) The internal client ID used by Riak to route responses
     # @raise [ArgumentError] raised if any options are invalid
     def initialize(options={})
-      options.assert_valid_keys(:host, :port, :prefix, :client_id, :mapred)
+      options.assert_valid_keys(:host, :port, :prefix, :client_id, :mapred, :user, :password)
       self.host      = options[:host]      || "127.0.0.1"
       self.port      = options[:port]      || 8098
       self.client_id = options[:client_id] || make_client_id
